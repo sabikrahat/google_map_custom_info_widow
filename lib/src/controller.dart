@@ -1,5 +1,7 @@
 // lib/src/controller.dart
-import 'dart:ui';
+
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -48,7 +50,13 @@ class CustomInfoWindowController {
     }
     try {
       final sc = await googleMapController!.getScreenCoordinate(_position!);
-      _screenOffset = Offset(sc.x.toDouble(), sc.y.toDouble());
+      // On Android, getScreenCoordinate returns physical pixels.
+      // On iOS, it returns logical pixels (points).
+      // Flutter Positioned uses logical pixels, so we must convert on Android.
+      final double dpr = Platform.isAndroid
+          ? ui.PlatformDispatcher.instance.views.first.devicePixelRatio
+          : 1.0;
+      _screenOffset = Offset(sc.x.toDouble() / dpr, sc.y.toDouble() / dpr);
     } catch (_) {
       _screenOffset = null;
     }
